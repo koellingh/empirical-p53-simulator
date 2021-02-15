@@ -24,21 +24,27 @@ EMP_BUILD_CONFIG(MyConfigType,
     VALUE(MUT_PROB, double, 0.4, "Chance of mutation"),
     VALUE(MUT_MALIG, double, 0.05, "Chance of developing a MALIG mutation"),
     VALUE(MUT_BENIG, double, 0.05, "Chance of developing a BENIG mutation") , 
-    VALUE(DOES_MUTATE, bool, TRUE, "If there should be a mutation") ,
-    if (!DOES_MUTATE) 
-    VALUE(INIT_P53, double, 0.5, "Amount of P53 gene")
+    VALUE(DOES_MUTATE, bool, true, "If there should be a mutation"),
+    VALUE(INIT_P53, double, 0.5, "Amount of P53 //gene")
 )
-
+// config.DOES_MUTATE()
 int main(int argc, char* argv[])
 {
-  emp::vector<std::string> args = emp::cl::args_to_strings(argc, argv);
-
-  emp::Random random(2);
-  OrgWorld world(random);
   MyConfigType config;
-  config.Read("MySettings.cfg");
   bool success = config.Read("MySettings.cfg");
   if(!success) config.Write("MySettings.cfg");
+
+  auto args = emp::cl::ArgManager(argc, argv);
+  if (args.ProcessConfigOptions(config, std::cout, "MySettings.cfg") == false) {
+  std::cerr << "There was a problem in processing the options file." << std::endl;
+  exit(1);
+  }
+  if (args.TestUnknown() == false) {
+  std::cerr << "Leftover args no good." << std::endl;
+  exit(1);
+  }
+  emp::Random random(2);
+  OrgWorld world(random);
 
   //world.SetupOrgFile("Org_Vals_1.dat");
   
@@ -52,14 +58,4 @@ int main(int argc, char* argv[])
     std::cout << "Population: " << world.GetNumOrgs() << std::endl;
     world.Update();
   }
-  auto args = emp::cl::ArgManager(argc, argv);
-  if (args.ProcessConfigOptions(config, std::cout, "MySettings.cfg") == false) {
-  cerr << "There was a problem in processing the options file." << endl;
-  exit(1);
-  }
-  if (args.TestUnknown() == false) {
-  cerr << "Leftover args no good." << endl;
-  exit(1);
-  }
-
 }
