@@ -16,6 +16,8 @@ class OrgWorld : public emp::World<Organism> {
     
     emp::Ptr<emp::DataMonitor<double, emp::data::Histogram>> data_node_orgcoop;
     emp::Ptr<emp::DataMonitor<int>> data_node_orgcount;
+    // our own DataMonitor pointer
+    emp::Ptr<emp::DataMonitor<double>> data_node_foodcount;emp::Ptr<emp::DataMonitor<double>> data_node_p53count;
 
     public:
 
@@ -26,6 +28,8 @@ class OrgWorld : public emp::World<Organism> {
     ~OrgWorld() {
         if(data_node_orgcoop) data_node_orgcoop.Delete();
         if(data_node_orgcount) data_node_orgcount.Delete();
+        if(data_node_foodcount) data_node_foodcount.Delete();
+        if(data_node_p53count) data_node_p53count.Delete();
     }
 
     emp::World<Organism>::pop_t getPop() {return pop;}
@@ -57,6 +61,32 @@ class OrgWorld : public emp::World<Organism> {
         return *data_node_orgcoop;
     }
 
+    emp::DataMonitor<double>& GetP53DataNode() {
+        if(!data_node_p_53_count) {
+        data_node_p_53.New();
+        OnUpdate([this](size_t){
+            data_node_p_53 -> Reset();
+            for (size_t i = 0; i< pop.size(); i++)
+            if(IsOccupied(i))
+                data_node_p_53->AddDatum(pop[i]->getp53());
+        });
+        }
+        return *data_node_p_53;
+
+    }
+    emp::DataMonitor<double>& GetFoodCountDataNode() {
+        if(!data_node_foodcount) {
+        data_node_foodcount.New();
+        OnUpdate([this](size_t){
+            data_node_foodcount -> Reset();
+            for (size_t i = 0; i< pop.size(); i++)
+            if(IsOccupied(i))
+                data_node_foodcount->AddDatum(pop[i]->getFoodCount());
+        });
+        }
+        return *data_node_foodcount;
+
+    }
     emp::DataFile & SetupOrgFile(const std::string & filename) {
     auto & file = SetupFile(filename);
     auto & node1 = GetOrgCountDataNode();
@@ -99,6 +129,7 @@ class OrgWorld : public emp::World<Organism> {
           total_coop += pop[i]->getCoopProb();
 
       }
+      emp::DataMonitor<double> data_food = GetFoodCountDataNode();
       std::cout << "Average cooperation probability: " << total_coop/GetNumOrgs() <<std::endl;
   }
 
