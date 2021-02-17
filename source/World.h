@@ -10,14 +10,14 @@
 
 class OrgWorld : public emp::World<Organism> {
 
-    double resources_per_org = 100;
+    double resources_per_org = 0.5;
     emp::Random &random;
     emp::Ptr<emp::Random> random_ptr;
-    
+    double init_food = 10000000;
     emp::Ptr<emp::DataMonitor<double, emp::data::Histogram>> data_node_orgcoop;
     emp::Ptr<emp::DataMonitor<int>> data_node_orgcount;
     // our own DataMonitor pointer
-    emp::Ptr<emp::DataMonitor<double>> data_node_foodcount;emp::Ptr<emp::DataMonitor<double>> data_node_p53count;
+    emp::Ptr<emp::DataMonitor<double>> data_node_foodcount;emp::Ptr<emp::DataMonitor<double>> data_node_p_53_count;
 
     public:
 
@@ -29,7 +29,7 @@ class OrgWorld : public emp::World<Organism> {
         if(data_node_orgcoop) data_node_orgcoop.Delete();
         if(data_node_orgcount) data_node_orgcount.Delete();
         if(data_node_foodcount) data_node_foodcount.Delete();
-        if(data_node_p53count) data_node_p53count.Delete();
+        if(data_node_p_53_count) data_node_p_53_count.Delete();
     }
 
     emp::World<Organism>::pop_t getPop() {return pop;}
@@ -63,15 +63,15 @@ class OrgWorld : public emp::World<Organism> {
 
     emp::DataMonitor<double>& GetP53DataNode() {
         if(!data_node_p_53_count) {
-        data_node_p_53.New();
+        data_node_p_53_count.New();
         OnUpdate([this](size_t){
-            data_node_p_53 -> Reset();
+            data_node_p_53_count -> Reset();
             for (size_t i = 0; i< pop.size(); i++)
             if(IsOccupied(i))
-                data_node_p_53->AddDatum(pop[i]->getp53());
+                data_node_p_53_count->AddDatum(pop[i]->getP53());
         });
         }
-        return *data_node_p_53;
+        return *data_node_p_53_count;
 
     }
     emp::DataMonitor<double>& GetFoodCountDataNode() {
@@ -91,20 +91,14 @@ class OrgWorld : public emp::World<Organism> {
     auto & file = SetupFile(filename);
     auto & node1 = GetOrgCountDataNode();
     auto & node = GetOrgCoopValDataNode();
+    auto & node2 = GetFoodCountDataNode();
     node.SetupBins(0.0, 1.1, 10); //Necessary because range exclusive
     file.AddVar(update, "update", "Update");
     file.AddMean(node, "mean_coopval", "Average organism cooperation value");
+    // adding mean to new datamonitor, food_count
+    file.AddMean(node2, "mean_foodval", "Average organism food value");
     file.AddTotal(node1, "count", "Total number of organisms");
-    file.AddHistBin(node, 0, "Hist_0.0", "Count for histogram bin 0.0 to <0.1");
-    file.AddHistBin(node, 1, "Hist_0.1", "Count for histogram bin 0.1 to <0.2");
-    file.AddHistBin(node, 2, "Hist_0.2", "Count for histogram bin 0.2 to <0.3");
-    file.AddHistBin(node, 3, "Hist_0.3", "Count for histogram bin 0.3 to <0.4");
-    file.AddHistBin(node, 4, "Hist_0.4", "Count for histogram bin 0.4 to <0.5");
-    file.AddHistBin(node, 5, "Hist_0.5", "Count for histogram bin 0.5 to <0.6");
-    file.AddHistBin(node, 6, "Hist_0.6", "Count for histogram bin 0.6 to <0.7");
-    file.AddHistBin(node, 7, "Hist_0.7", "Count for histogram bin 0.7 to <0.8");
-    file.AddHistBin(node, 8, "Hist_0.8", "Count for histogram bin 0.8 to <0.9");
-    file.AddHistBin(node, 9, "Hist_0.9", "Count for histogram bin 0.9 to 1.0");
+
 
 
     file.PrintHeaderKeys();
@@ -114,13 +108,15 @@ class OrgWorld : public emp::World<Organism> {
 
   void Update() {
       emp::World<Organism>::Update();
-
+      
       emp::vector<size_t> schedule = emp::GetPermutation(random, GetSize());
       double total_coop = 0;
       for (size_t i: schedule) {
           if (IsOccupied(i) == false) continue; 
-
-          pop[i]->Process(resources_per_org);
+          if(init_food > 0 ){
+            pop[i]->Process(resources_per_org);
+            //init_food -= resources_per_org;
+          }
           emp::Ptr<Organism> offspring = pop[i]->checkReproduction();
           if(offspring) {
               DoBirth(*offspring, i);
@@ -130,7 +126,8 @@ class OrgWorld : public emp::World<Organism> {
 
       }
       emp::DataMonitor<double> data_food = GetFoodCountDataNode();
-      std::cout << "Average cooperation probability: " << total_coop/GetNumOrgs() <<std::endl;
+      std::cout << "Average cooperation: " << total_coop/GetNumOrgs() <<std::endl;
+      std::cout << "food left: " << init_food <<std::endl;
   }
 
 };
