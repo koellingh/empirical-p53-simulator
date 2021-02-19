@@ -92,11 +92,14 @@ class OrgWorld : public emp::World<Organism> {
     auto & node1 = GetOrgCountDataNode();
     auto & node = GetOrgCoopValDataNode();
     auto & node2 = GetFoodCountDataNode();
+    auto & node3 = GetP53DataNode();
     node.SetupBins(0.0, 1.1, 10); //Necessary because range exclusive
     file.AddVar(update, "update", "Update");
     file.AddMean(node, "mean_coopval", "Average organism cooperation value");
     // adding mean to new datamonitor, food_count
     file.AddMean(node2, "mean_foodval", "Average organism food value");
+    //added p53 data monitor
+    file.AddMean(node3, "mean_p53", "Average organism p53 value");
     file.AddTotal(node1, "count", "Total number of organisms");
 
 

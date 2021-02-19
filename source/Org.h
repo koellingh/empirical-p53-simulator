@@ -50,24 +50,37 @@ class Organism {
     void setMutRate(double _in) {mut_rate = _in;}
     void setMutMalig(double _in) {mut_malig = _in;}
     void setMutBenig(double _in) {mut_benig = _in;}
-
-    void mutate() {
+    //mutate returns a boolean so that p53 can check if it should kill the cell, returns true if muated, false if doesnt mutate
+    bool mutate() {
         if(does_mutate){
           coop_prob += random->GetRandNormal(0.0, mut_rate);
           if(coop_prob < 0) coop_prob = 0;
           else if (coop_prob > 1) coop_prob = 1;
         }
-        int num_mutate = rand() % 100 + 1;
-        if(does_mutate && num_mutate < (mut_rate*100)){
-          int num_mut_type = rand() % 100 + 1;
+        //repalced all if statements with probability to mutate to use CheckMutate
+        if(does_mutate && CheckMutate(mut_rate, 0.0)){
+          int num_mut_type = rand() % 100;
           if(num_mut_type < (mut_benig*100)){
-            food_count -= random->GetRandNormal(0.0, 0.5); 
+            food_count -= random->GetRandNormal(0.0, 0.5);
+            if(food_count < 1) food_count = 1;
+            return true;
           }
           else if (num_mut_type < (mut_malig*100)) {
             food_count += random->GetRandNormal(0.0, 0.5);
+            return true;
           }
-          if(food_count < 1) food_count = 1;
+          return false;
+          
         }        
+    }
+    /*function to check if something will mutate
+    used to replacae the large amount of code inside if statements
+    will make a number between 0 and 99 and check if the value created is lesser than 100*prob
+    */
+    bool CheckMutate(double prob, double start){
+      random->GetRandNormal(start, 99.0); 
+      if(random < (prob*100)) return true;
+      else return false;
     }
     //should change to something about food count
     emp::Ptr<Organism> checkReproduction() {
@@ -76,6 +89,11 @@ class Organism {
             offspring = new Organism(*this);
             points = 0;
             mutate();
+            //changing offsprings p53 value by +- 0.1(max) but something is weird, more often picks negative values for some reason no clue why
+            double offspring_p53 = p_53 - (random->GetRandNormal(-0.1, 0.1));
+            if (offspring_p53 > 1) offspring_p53 = 1;
+            if (offspring_p53 < 0) offspring_p53 = 0;
+            offspring->setP53(offspring_p53);
             offspring->mutate();
             offspring->setPoints(0);
         }
