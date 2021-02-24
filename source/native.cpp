@@ -16,7 +16,7 @@
 // This is the main function for the NATIVE version of this project.
 
 EMP_BUILD_CONFIG(MyConfigType,
-    VALUE(SEED, int, 10, "What value should the random seed be?"), 
+    VALUE(SEED, int, 1, "What value should the random seed be?"), 
     VALUE(START_PROB, double, 0.5, "What cooperation probability value should the starting organism have?"),
     VALUE(FILE_NAME, std::string, "_data.dat", "Root output file name"),
     VALUE(REPRODUCE_FOOD, double, 10, "Amount of food required to reproduce"),
@@ -25,7 +25,8 @@ EMP_BUILD_CONFIG(MyConfigType,
     VALUE(MUT_MALIG, double, 0.05, "Chance of developing a MALIG mutation"),
     VALUE(MUT_BENIG, double, 0.05, "Chance of developing a BENIG mutation") , 
     VALUE(DOES_MUTATE, bool, true, "If there should be a mutation"),
-    VALUE(INIT_P53, double, 0.5, "Amount of P53 //gene")
+    VALUE(INIT_P53, double, 0.3, "Amount of P53 //gene"),
+    VALUE(OUTPUT_FILE, std::string, "Org_Vals_", "data file output name")
 )
 // config.DOES_MUTATE()
 
@@ -46,10 +47,10 @@ int main(int argc, char* argv[])
   std::cerr << "Leftover args no good." << std::endl;
   exit(1);
   }
-  emp::Random random(2);
+  emp::Random random(config.SEED());
   OrgWorld world(random);
 
-  world.SetupOrgFile("Org_Vals_1.dat");
+  world.SetupOrgFile(config.OUTPUT_FILE() + std::to_string(config.SEED()) + ".dat");
   
 
   emp::Ptr<Organism> new_org = new Organism(&random, 0.5);
@@ -66,7 +67,8 @@ int main(int argc, char* argv[])
   
   for(int i=0; i<1000; i++) {
     std::cout<< "Update: " << i << std::endl;
-    std::cout << "Population Count: " << world.GetNumOrgs() << std::endl;
+    std::cout << "population Count: " << world.GetNumOrgs() << std::endl;
+    //std::cout << "value of i: " << d
     world.Update();
   }
 }
