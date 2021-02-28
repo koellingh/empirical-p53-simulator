@@ -126,14 +126,14 @@ class OrgWorld : public emp::World<Organism> {
   //     else 
   //     return false;
   // }  
-  std::size_t* GetNeighbors(size_t init_pos){
-    /*
-    100X100 grid
-    100s digit floor(init_pos\\100)
-    init_pos - 100s digit *100
+ /* std::size_t* GetNeighbors(size_t init_pos){
+    
+    //100X100 grid
+    //100s digit floor(init_pos\\100)
+    //init_pos - 100s digit *100
 
-    (init_pos / 100) <=5 && init_pos % 100 == 0 z
-    */
+    //(init_pos / 100) <=5 && init_pos % 100 == 0 z
+    
     
     std::size_t y_pos = floor(init_pos/100);
     std::size_t x_pos = init_pos - (y_pos*100);
@@ -157,10 +157,11 @@ class OrgWorld : public emp::World<Organism> {
       }
 
     }
-  //std::cout << neighbor_array;
+  std::cout << neighbor_array;
   return neighbor_array;
 
-  }
+  }*/
+  
   void Update() {
       emp::World<Organism>::Update();
       
@@ -174,35 +175,25 @@ class OrgWorld : public emp::World<Organism> {
           }
           emp::Ptr<Organism> offspring = pop[i]->checkReproduction();
 
-           if(offspring && offspring->getP53() == -1){
-             //kills the pop[i] cell if the offspring value is null
-             //std::cout << "actual death wow" <<std::endl;
+          
+           if (offspring->getP53() == -1){
+             //kills the pop[i] cell if the offspring value is -1
               DoDeath(i);
            }
-
-          else if(offspring) {
-              DoBirth(*offspring, i);
-              //emp::WorldPosition rand_neighbor = GetRandomNeighborPos(i);
-              //std::cout << "I is: " << i <<std::endl;
-              //std::cout << "neighbor is: " << to_string(rand_neighbor) <<std::endl;
-
-              //std::cout << "hmmm birth" << std::endl;
-          }
-          if(pop[i]->getMutMalig()){
-            std::cout<<"malig mutation";
-            size_t* neighbors = GetNeighbors(i);
-          }
+          
+           else DoBirth(*offspring, i);
 
 
-          total_coop += pop[i]->getCoopProb();
+           total_coop += pop[i]->getCoopProb();
           //std::cout << "I is: " << i <<std::endl;
-
+          
       }
+      
       emp::DataMonitor<double> data_food = GetFoodCountDataNode();
       //std::cout << "Average cooperation: " << total_coop/GetNumOrgs() <<std::endl;
       std::cout << "food left: " << init_food <<std::endl;
-
+      
   }
-
+  
 };
 #endif
