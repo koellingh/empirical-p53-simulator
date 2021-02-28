@@ -17,7 +17,7 @@ class Organism {
         double init_food;
         double mut_malig;
         double mut_benig;
-        bool is_malig;
+        bool is_malig = false;
         emp::Ptr<emp::Random> random;
 
     public:
@@ -53,7 +53,8 @@ class Organism {
     void setMutRate(double _in) {mut_rate = _in;}
     void setMutMalig(double _in) {mut_malig = _in;}
     void setMutBenig(double _in) {mut_benig = _in;}
-    //bool getMutMalig() {return is_malig;}
+    double getMutMaligValue() {return mut_malig;}
+    bool getMutMalig() {return is_malig;}
     //mutate returns a boolean so that p53 can check if it should kill the cell, returns true if muated, false if doesnt mutate
     bool mutate() {
         if(does_mutate){
@@ -63,24 +64,24 @@ class Organism {
         }
         //replaced all if statements with probability to mutate to use CheckMutate
         if(does_mutate && CheckMutate(mut_rate, 0.0)){
-          int num_mut_type = (random->GetDouble());
+          double num_mut_type = (random->GetDouble());
           if(num_mut_type < (mut_benig)){
             food_count -= random->GetRandNormal(0.25, 0.25);
-            if(food_count < 1) food_count = 1;
-            //is_malig = false;
+            if(food_count < 1) {food_count = 1;}
+            is_malig = false;
             return true;
           }
           else if (num_mut_type < mut_malig+mut_benig) {
-            //is_malig = true;
-            food_count += random->GetRandNormal(0.25, 0.25);
+            is_malig = true;
+            food_count += random->GetRandNormal(4.5, 1.5);
             
             return true;
           }
-          //is_malig = false;
+          is_malig = false;
           return false;
           
         }
-        //is_malig = false;
+        is_malig = false;
         return false;        
     }
     /*function to check if something will mutate
@@ -96,9 +97,12 @@ class Organism {
     emp::Ptr<Organism> checkReproduction() {
         emp::Ptr<Organism> offspring;
         if(points>=food_count) {
-            offspring = new Organism(*this);
+            offspring= new Organism(*this);
             points = 0;
             if(mutate() && p_53>(random->GetDouble())){
+              //need to figure out what to return here after deleting the main thing (not putting in code yet becuase itll fuck up everything else) 
+              // delete using         delete *this (maybe)
+              //setting this to differentiate between not having food to create offspring and p53 killing the cell
               offspring->setP53(-1);
               return offspring;
             }

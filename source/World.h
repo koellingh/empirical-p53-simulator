@@ -15,7 +15,7 @@ class OrgWorld : public emp::World<Organism> {
     double resources_per_org = 0.5;
     emp::Random &random;
     emp::Ptr<emp::Random> random_ptr;
-    double init_food = 10000000;
+    double init_food = 10000;
     emp::Ptr<emp::DataMonitor<double, emp::data::Histogram>> data_node_orgcoop;
     emp::Ptr<emp::DataMonitor<int>> data_node_orgcount;
     // our own DataMonitor pointer
@@ -111,89 +111,38 @@ class OrgWorld : public emp::World<Organism> {
     return file;
   }
 
-  // bool isNeighbor(int id1, int id2){
-  //     emp_assert(pop_sizes.size() == 2);
-
-  //     int size_x = (int) pop_sizes[0];
-  //     int size_y = (int) pop_sizes[1];
-
-  //     int diff = id1 - id2;
-  //     int row_diff = abs(diff / size_x);
-  //     int col_diff = abs(diff%size_x);
-
-  //     if((row_diff <= 1 || row_diff == (size_y-1)) && 
-  //       (col_diff <= 1 || col_diff == (size_x-1)))  return true;
-  //     else 
-  //     return false;
-  // }  
- /* std::size_t* GetNeighbors(size_t init_pos){
-    
-    //100X100 grid
-    //100s digit floor(init_pos\\100)
-    //init_pos - 100s digit *100
-
-    //(init_pos / 100) <=5 && init_pos % 100 == 0 z
-    
-    
-    std::size_t y_pos = floor(init_pos/100);
-    std::size_t x_pos = init_pos - (y_pos*100);
-    int lower_y = y_pos - 3;
-    if(lower_y < 0) lower_y = 0;
-    int upper_y = y_pos + 3;
-    if(upper_y > 99) upper_y = 99;
-    int lower_x = x_pos - 3;
-    if(lower_x < 0) lower_x = 0;
-    int upper_x = x_pos + 3;
-    if(upper_x < 99) upper_x = 99;
-
-    size_t neighbor_array [49] = {NULL};
-    int spot = 0;
-    for(int i = lower_y; i<=upper_y; i++){
-      for(int j = lower_x; i<=upper_x; j++){
-        size_t index = (i*100) + j;
-        neighbor_array[spot] = index;
-        spot ++;
-        
-      }
-
-    }
-  std::cout << neighbor_array;
-  return neighbor_array;
-
-  }*/
-  
+ 
   void Update() {
       emp::World<Organism>::Update();
       
       emp::vector<size_t> schedule = emp::GetPermutation(random, GetSize());
       double total_coop = 0;
       for (size_t i: schedule) {
-          if (IsOccupied(i) == false) continue; 
-          if(init_food > 0 ){
+          if (IsOccupied(i) == false) continue;
+
+          if(init_food > 0){
             pop[i]->Process(resources_per_org);
-            //init_food -= resources_per_org;
+
           }
+          
           emp::Ptr<Organism> offspring = pop[i]->checkReproduction();
 
-          
-           if (offspring->getP53() == -1){
-             //kills the pop[i] cell if the offspring value is -1
+           if(offspring && offspring->getP53() == -1){
+             //kills the pop[i] cell if the offspring value is null
+
               DoDeath(i);
            }
-          
-           else DoBirth(*offspring, i);
 
+          else if(offspring) {
+              DoBirth(*offspring, i);
 
-           total_coop += pop[i]->getCoopProb();
-          //std::cout << "I is: " << i <<std::endl;
-          
+          }
       }
-      
       emp::DataMonitor<double> data_food = GetFoodCountDataNode();
-      //std::cout << "Average cooperation: " << total_coop/GetNumOrgs() <<std::endl;
-      std::cout << "food left: " << init_food <<std::endl;
+
       
+
   }
-  
+
 };
 #endif

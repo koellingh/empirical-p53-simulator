@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
   emp::Random random(config.SEED());
   OrgWorld world(random);
 
-  world.SetupOrgFile(config.OUTPUT_FILE() + std::to_string(config.SEED()) + ".dat");
+  world.SetupOrgFile(config.OUTPUT_FILE() + ".dat");
   
 
   emp::Ptr<Organism> new_org = new Organism(&random, 0.5);
@@ -65,10 +65,10 @@ int main(int argc, char* argv[])
   world.Inject(*new_org);
   world.Resize(100,100);
   
-  for(int i=0; i<1000; i++) {
-    std::cout<< "Update: " << i << std::endl;
-    std::cout << "population Count " << world.GetNumOrgs() << std::endl;
-    //std::cout << "value of i: " << 
+  for(int i=0; i<10000; i++) {
+    // std::cout<< "Update: " << i << std::endl;
+    // std::cout << "population Count: " << world.GetNumOrgs() << std::endl;
+    //std::cout << "value of i: " << d
     world.Update();
   }
 }
