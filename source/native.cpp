@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
   world.Inject(*new_org);
   world.Resize(100,100);
   
-  for(int i=0; i<10000; i++) {
+  for(int i=0; i<2000; i++) {
     // std::cout<< "Update: " << i << std::endl;
     // std::cout << "population Count: " << world.GetNumOrgs() << std::endl;
     //std::cout << "value of i: " << d
