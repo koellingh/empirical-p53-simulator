@@ -1,7 +1,7 @@
 #a script to run several replicates of several treatments locally
 
-directory = "trial1/"
-seeds = range(1, 7)
+directory = "trial2/"
+seeds = range(7, 21)
 mut_malig = [0.0, 0.25, 0.5, 0.75, 0.9]
 mut_benig = [0.0, 0.25, 0.5, 0.75, 0.9]
 p_53 = [0.0, 0.05, 0.06, 0.08, 0.13, 0.15, 0.2]

@@ -107,7 +107,7 @@ class Organism {
               return offspring;
             }
             //changing offsprings p53 value by +- 0.1(max) but something is weird, more often picks negative values for some reason no clue why
-            double offspring_p53 = p_53 + (random->GetRandNormal(0, 0.1));
+            double offspring_p53 = p_53 + (random->GetRandNormal(0, 0.025));
             if (offspring_p53 > 1) offspring_p53 = 1;
             if (offspring_p53 < 0) offspring_p53 = 0;
             offspring->setP53(offspring_p53);
