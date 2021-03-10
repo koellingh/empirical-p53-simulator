@@ -1,6 +1,6 @@
 library(tidyverse)
 library(scales)
-
+library(xfactor)
 library(RColorBrewer)
 
 #Set your working directory- this is problematic for me because it won't let me change my wd
@@ -44,7 +44,7 @@ col_names <- c(list.files(path = paste0("C:/Users/koell/OneDrive - Carleton Coll
 # change column names
 col_names
 length(col_names)
-data
+as.tibble(data)
 colnames(data)[1] <- "Update"
 colnames(data)[2:3501] <- as.character(col_names)
 data
@@ -52,8 +52,11 @@ data
 ####################################################################
 # p53 expression analysis
 ## we are setting benig constant to 0.5 and malig to 0.5.
+data %>% select("Update")
+glimpse(data)
+data <- as.data.frame(data)
 malig_0.5_benig_0.5 <- data %>%
-  select(colnames(data)[1], matches("benig0.5") & matches("malig0.5")) %>%
+  select(Update, matches("benig0.5") & matches("malig0.5")) %>%
   pivot_longer(
     cols = (SP1malig0.5benig0.5p530.0.dat:SP9malig0.5benig0.5p530.2.dat),
     names_to = "starting_P53",
@@ -351,65 +354,284 @@ ggplot(malig_0.75_p530.05, aes(x = Update, y = Mean_p53, color = Starting_Benig_
 
 
 ######################################################################
-## simpler graphs without 
+## simpler graphs that tailor to our needs
 
-malig_0.5_p530.08 <- data %>%
+## keeping malig rate constant
+# looking at relationships with different p_53 starting vals
+data <- as.tibble(data)
+p_53_partition <- data %>% 
+  select(colnames(data)[1], matches("p530.08") & matches("malig0.5") & matches("SP3") | matches("p530.05") & matches("malig0.5") & matches("SP3") | matches("p530.15") & matches("malig0.5") & matches("SP3")) %>% 
+  pivot_longer(
+    cols = (2:16),
+    names_to = "starting_benig_rate",
+    values_to = "Mean_p53") %>%
+  separate(starting_benig_rate,
+           c("Seed", "Starting_Benig_Rate"),
+           sep = "(?<=.)(?=[m])") %>%
+  separate(Starting_Benig_Rate, 
+           c("Malig_Start", "Benign_Start"),
+           sep = "(?<=.)(?=[b])") %>%
+  separate(Benign_Start,
+           c("Benign_Start", "P53_Start"),
+           sep = "(?<=.)(?=[p])") %>%
+  filter(Mean_p53 > 0.05 & Mean_p53 <0.15) %>%
+  filter(Update < 2500) %>% 
+  select(-Seed) %>%
+  mutate(Benign_Start = as.factor(Benign_Start), 
+         Malig_Start = as.factor(Malig_Start), 
+         P53_Start = as.factor(P53_Start)) %>%
+  mutate(Benign_Start = xfactor(Benign_Start,
+                                       levels = c("0.0 Benig Rate" = "benig0.0",
+                                          "0.25 Benig Rate" = "benig0.25",
+                                          "0.5 Benig Rate" = "benig0.5",
+                                          "0.75 Benig Rate" = "benig0.75",
+                                          "0.9 Benig Rate" = "benig0.9"))) %>%
+  mutate(Malig_Start = xfactor(Malig_Start,
+                                levels = c("0.5 Malig Rate" = "malig0.5"))) %>%
+  mutate(P53_Start = xfactor(P53_Start,
+                                levels = c("0.05 P53 Rate" = "p530.05",
+                                           "0.08 P53 Rate" = "p530.08",
+                                           "0.15 P53 Rate" = "p530.15")))  
+## plot data
+ggplot(p_53_partition, aes(x = Update, y = Mean_p53, color = Benign_Start)) + 
+  geom_jitter() + 
+  scale_color_brewer(palette = "Dark2") + 
+  facet_wrap(vars(P53_Start)) +
+  theme(axis.text.x = element_text(angle=90, hjust=1))
+
+
+# looking at relationships with diff benign starting vals
+benign_partition <- data %>% 
+  select(colnames(data)[1], matches("benig0.25") & matches("malig0.5") & matches("SP3") | matches("benig0.5") & matches("malig0.5") & matches("SP3") | matches("benig0.75") & matches("malig0.5") & matches("SP3")) %>%
+  pivot_longer(
+    cols = (2:22),
+    names_to = "starting_benig_rate",
+    values_to = "Mean_p53") %>%
+  separate(starting_benig_rate,
+           c("Seed", "Starting_Benig_Rate"),
+           sep = "(?<=.)(?=[m])") %>%
+  separate(Starting_Benig_Rate, 
+           c("Malig_Start", "Benign_Start"),
+           sep = "(?<=.)(?=[b])") %>%
+  separate(Benign_Start,
+           c("Benign_Start", "P53_Start"),
+           sep = "(?<=.)(?=[p])") %>%
+  #filter(Mean_p53 > 0.05 & Mean_p53 <0.15) %>%
+  filter(Update < 2500) %>% 
+  select(-Seed) %>%
+  mutate(Benign_Start = as.factor(Benign_Start), 
+         Malig_Start = as.factor(Malig_Start), 
+         P53_Start = as.factor(P53_Start)) %>%
+  mutate(Benign_Start = xfactor(Benign_Start,
+                                levels = c("0.25 Benig Rate" = "benig0.25",
+                                           "0.5 Benig Rate" = "benig0.5",
+                                           "0.75 Benig Rate" = "benig0.75"))) %>%
+  mutate(Malig_Start = xfactor(Malig_Start,
+                               levels = c("0.0 Malig Rate" = "malig0.5"))) %>%
+  mutate(P53_Start = xfactor(P53_Start,
+                             levels = c("0.0 P53 Rate" = "p530.0.dat",
+                                        "0.05 P53 Rate" = "p530.05",
+                                        "0.06 P53 Rate" = "p530.06",
+                                        "0.08 P53 Rate" = "p530.08",
+                                        "0.13 P53 Rate" = "p530.13",
+                                        "0.15 P53 Rate" = "p530.15",
+                                        "0.20 P53 Rate" = "p530.2")))  
+## plot data
+ggplot(benign_partition, aes(x = Update, y = Mean_p53, color = P53_Start)) + 
+  geom_jitter() + 
+  scale_color_brewer(palette = "Dark2") + 
+  facet_wrap(vars(Benign_Start)) +
+  theme(axis.text.x = element_text(angle=90, hjust=1))
+
+
+
+## keeping benig rate constant
+# looking at relationships with different p_53 starting vals
+p_53_partition_benig <- data %>% 
+  select(colnames(data)[1], matches("p530.08") & matches("benig0.5") & matches("SP3") | matches("p530.05") & matches("benig0.5") & matches("SP3") | matches("p530.15") & matches("benig0.5") & matches("SP3")) %>%
+  pivot_longer(
+    cols = (2:16),
+    names_to = "starting_benig_rate",
+    values_to = "Mean_p53") %>%
+  separate(starting_benig_rate,
+           c("Seed", "Starting_Benig_Rate"),
+           sep = "(?<=.)(?=[m])") %>%
+  separate(Starting_Benig_Rate, 
+           c("Malig_Start", "Benign_Start"),
+           sep = "(?<=.)(?=[b])") %>%
+  separate(Benign_Start,
+           c("Benign_Start", "P53_Start"),
+           sep = "(?<=.)(?=[p])") %>%
+  filter(Mean_p53 > 0.05 & Mean_p53 <0.15) %>%
+  filter(Update < 2500) %>% 
+  select(-Seed) %>%
+  mutate(Benign_Start = as.factor(Benign_Start), 
+         Malig_Start = as.factor(Malig_Start), 
+         P53_Start = as.factor(P53_Start)) %>%
+  mutate(Malig_Start = xfactor(Malig_Start,
+                                levels = c("0.0 Malig Rate" = "malig0.0",
+                                           "0.25 Malig Rate" = "malig0.25",
+                                           "0.5 Malig Rate" = "malig0.5",
+                                           "0.75 Malig Rate" = "malig0.75",
+                                           "0.9 Malig Rate" = "malig0.9"))) %>%
+  mutate(Benign_Start = xfactor(Benign_Start,
+                               levels = c("0.5 Benig Rate" = "benig0.5"))) %>%
+  mutate(P53_Start = xfactor(P53_Start,
+                             levels = c("0.05 P53 Rate" = "p530.05",
+                                        "0.08 P53 Rate" = "p530.08",
+                                        "0.15 P53 Rate" = "p530.15")))  
+## plot data
+ggplot(p_53_partition_benig, aes(x = Update, y = Mean_p53, color = Malig_Start)) + 
+  geom_jitter() + 
+  scale_color_brewer(palette = "Dark2") + 
+  facet_wrap(vars(P53_Start)) +
+  theme(axis.text.x = element_text(angle=90, hjust=1))
+
+
+# looking at relationships with diff benign starting vals
+malig_partition_benig <- data %>% 
+  select(colnames(data)[1], matches("malig0.25") & matches("benig0.5") & matches("SP3") | matches("malig0.5") & matches("benig0.5") & matches("SP3") | matches("malig0.75") & matches("benig0.5") & matches("SP3")) %>%
+  pivot_longer(
+    cols = (2:22),
+    names_to = "starting_benig_rate",
+    values_to = "Mean_p53") %>%
+  separate(starting_benig_rate,
+           c("Seed", "Starting_Benig_Rate"),
+           sep = "(?<=.)(?=[m])") %>%
+  separate(Starting_Benig_Rate, 
+           c("Malig_Start", "Benign_Start"),
+           sep = "(?<=.)(?=[b])") %>%
+  separate(Benign_Start,
+           c("Benign_Start", "P53_Start"),
+           sep = "(?<=.)(?=[p])") %>%
+  #filter(Mean_p53 > 0.05 & Mean_p53 <0.15) %>%
+  filter(Update < 2500) %>% 
+  select(-Seed) %>%
+  mutate(Benign_Start = as.factor(Benign_Start), 
+         Malig_Start = as.factor(Malig_Start), 
+         P53_Start = as.factor(P53_Start)) %>%
+  mutate(Malig_Start = xfactor(Malig_Start,
+                                levels = c("0.25 Malig Rate" = "malig0.25",
+                                           "0.5 Malig Rate" = "malig0.5",
+                                           "0.75 Malig Rate" = "malig0.75"))) %>%
+  mutate(Benign_Start = xfactor(Benign_Start,
+                               levels = c("0.0 Benign Rate" = "benig0.5"))) %>%
+  mutate(P53_Start = xfactor(P53_Start,
+                             levels = c("0.0 P53 Rate" = "p530.0.dat",
+                                        "0.05 P53 Rate" = "p530.05",
+                                        "0.06 P53 Rate" = "p530.06",
+                                        "0.08 P53 Rate" = "p530.08",
+                                        "0.13 P53 Rate" = "p530.13",
+                                        "0.15 P53 Rate" = "p530.15",
+                                        "0.20 P53 Rate" = "p530.2")))  
+## plot data
+ggplot(malig_partition_benig, aes(x = Update, y = Mean_p53, color = P53_Start)) + 
+  geom_jitter() + 
+  scale_color_brewer(palette = "Dark2") + 
+  facet_wrap(vars(Malig_Start)) +
+  theme(axis.text.x = element_text(angle=90, hjust=1))
+
+
+
+## keeping p53 rate constant
+# looking at relationships with different p_53 starting vals
+malig_partition_p53 <- data %>% 
+  select(colnames(data)[1], matches("malig0.25") & matches("p530.08") & matches("SP3") | matches("malig0.5") & matches("p530.08") & matches("SP3") | matches("malig0.75") & matches("p530.08") & matches("SP3")) %>%  
+  pivot_longer(
+    cols = (2:16),
+    names_to = "starting_benig_rate",
+    values_to = "Mean_p53") %>%
+  separate(starting_benig_rate,
+           c("Seed", "Starting_Benig_Rate"),
+           sep = "(?<=.)(?=[m])") %>%
+  separate(Starting_Benig_Rate, 
+           c("Malig_Start", "Benign_Start"),
+           sep = "(?<=.)(?=[b])") %>%
+  separate(Benign_Start,
+           c("Benign_Start", "P53_Start"),
+           sep = "(?<=.)(?=[p])") %>%
+  filter(Mean_p53 > 0.05 & Mean_p53 <0.15) %>%
+  filter(Update < 2500) %>% 
+  select(-Seed) %>%
+  mutate(Benign_Start = as.factor(Benign_Start), 
+         Malig_Start = as.factor(Malig_Start), 
+         P53_Start = as.factor(P53_Start)) %>%
+  mutate(Benign_Start = xfactor(Benign_Start,
+                                levels = c("0.0 Benig Rate" = "benig0.0",
+                                           "0.25 Benig Rate" = "benig0.25",
+                                           "0.5 Benig Rate" = "benig0.5",
+                                           "0.75 Benig Rate" = "benig0.75",
+                                           "0.9 Benig Rate" = "benig0.9"))) %>%
+  mutate(Malig_Start = xfactor(Malig_Start,
+                               levels = c("0.25 Malig Rate" = "malig0.25",
+                                          "0.5 Malig Rate" = "malig0.5",
+                                          "0.75 Malig Rate" = "malig0.75"))) %>%
+  mutate(P53_Start = xfactor(P53_Start,
+                             levels = c("0.08 P53 Rate" = "p530.08")))  
+## plot data
+ggplot(malig_partition_p53, aes(x = Update, y = Mean_p53, color = Benign_Start)) + 
+  geom_jitter() + 
+  scale_color_brewer(palette = "Dark2") + 
+  facet_wrap(vars(Malig_Start)) +
+  theme(axis.text.x = element_text(angle=90, hjust=1))
+
+# looking at relationships with diff benign starting vals
+benign_partition_p53 <- data %>% 
+  select(colnames(data)[1], matches("benig0.25") & matches("p530.08") & matches("SP3") | matches("benig0.5") & matches("p530.08") & matches("SP3") | matches("benig0.75") & matches("p530.08") & matches("SP3")) %>%
+  pivot_longer(
+    cols = (2:16),
+    names_to = "starting_benig_rate",
+    values_to = "Mean_p53") %>%
+  separate(starting_benig_rate,
+           c("Seed", "Starting_Benig_Rate"),
+           sep = "(?<=.)(?=[m])") %>%
+  separate(Starting_Benig_Rate, 
+           c("Malig_Start", "Benign_Start"),
+           sep = "(?<=.)(?=[b])") %>%
+  separate(Benign_Start,
+           c("Benign_Start", "P53_Start"),
+           sep = "(?<=.)(?=[p])") %>%
+  filter(Mean_p53 > 0.05 & Mean_p53 <0.15) %>%
+  filter(Update < 2500) %>% 
+  select(-Seed) %>%
+  mutate(Benign_Start = as.factor(Benign_Start), 
+         Malig_Start = as.factor(Malig_Start), 
+         P53_Start = as.factor(P53_Start)) %>%
+  mutate(Benign_Start = xfactor(Benign_Start,
+                                levels = c("0.25 Benig Rate" = "benig0.25",
+                                           "0.5 Benig Rate" = "benig0.5",
+                                           "0.75 Benig Rate" = "benig0.75"))) %>%
+  mutate(Malig_Start = xfactor(Malig_Start,
+                               levels = c("0.0 Malig Rate" = "malig0.0",
+                                          "0.25 Malig Rate" = "malig0.25",
+                                          "0.5 Malig Rate" = "malig0.5",
+                                          "0.75 Malig Rate" = "malig0.75",
+                                          "0.9 Malig Rate" = "malig0.9"))) %>%
+  mutate(P53_Start = xfactor(P53_Start,
+                             levels = c("0.08 P53 Rate" = "p530.08")))  
+## plot data
+ggplot(benign_partition_p53, aes(x = Update, y = Mean_p53, color = Malig_Start)) + 
+  geom_jitter() + 
+  scale_color_brewer(palette = "Dark2") + 
+  facet_wrap(vars(Benign_Start)) +
+  theme(axis.text.x = element_text(angle=90, hjust=1))
+
   
-  select(colnames(data)[1], matches("p530.08") & matches("malig0.5")) %>% 
-  pivot_longer(
-    cols = (SP1malig0.5benig0.0p530.08.dat:SP9malig0.5benig0.9p530.08.dat),
-    names_to = "starting_benig_rate",
-    values_to = "Mean_p53") %>%
-  separate(starting_benig_rate,
-           c("Seed", "Starting_Benig_Rate"),
-           sep = "(?<=.)(?=[m])") %>%
-  mutate(Seed = as.factor(Seed)) %>%
-  mutate(Seed = fct_relevel(Seed, 
-                            "SP1", "SP2", "SP3", "SP4", "SP5", "SP6",
-                            "SP7", "SP8", "SP9", "SP10", "SP11", "SP12",
-                            "SP13", "SP14", "SP15", "SP16", "SP17", "SP18", 
-                            "SP19", "SP20")) %>%    
-  filter(Mean_p53 > 0.05 & Mean_p53 <0.15) %>%
-  filter(Update < 2000) %>%
-  mutate(Starting_Benig_Rate = as.factor(Starting_Benig_Rate)) %>%
-  mutate(Starting_Benig_Rate = fct_recode(Starting_Benig_Rate,
-                                          "0.0 Benig Rate" = "malig0.5benig0.0p530.08.dat",
-                                          "0.25 Benig Rate" = "malig0.5benig0.25p530.08.dat",
-                                          "0.5 Benig Rate" = "malig0.5benig0.5p530.08.dat",
-                                          "0.75 Benig Rate" = "malig0.5benig0.75p530.08.dat",
-                                          "0.9 Benig Rate" = "malig0.5benig0.9p530.08.dat"))
-## plot data
-ggplot(malig_0.5_p530.08, aes(x = Update, y = Mean_p53, color = Starting_Benig_Rate)) + 
-  geom_jitter() + 
-  scale_color_brewer(palette = "Dark2") + 
-  facet_wrap(vars(Seed)) + 
-  ggtitle("Malign 0.5 P53 0.08") + 
-  theme(axis.text.x = element_text(angle=90, hjust=1))
-as.tibble(data)
-temp <- data %>% 
-  select(colnames(data)[1], matches("p530.08") & matches("malig0.5")) %>% 
-  pivot_longer(
-    cols = (SP1malig0.0benig0.0p530.0.dat:SP9malig0.9benig0.9p530.2.dat),
-    names_to = "starting_benig_rate",
-    values_to = "Mean_p53") %>%
-  separate(starting_benig_rate,
-           c("Seed", "Starting_Benig_Rate"),
-           sep = "(?<=.)(?=[m])") %>%
-  filter(Seed = "SP1") %>%
-  filter(Mean_p53 > 0.05 & Mean_p53 <0.15) %>%
-  mutate(Starting_Benig_Rate = as.factor(Starting_Benig_Rate)) %>%
-  mutate(Starting_Benig_Rate = fct_recode(Starting_Benig_Rate,
-                                          "0.0 Benig Rate" = "malig0.5benig0.0p530.08.dat",
-                                          "0.25 Benig Rate" = "malig0.5benig0.25p530.08.dat",
-                                          "0.5 Benig Rate" = "malig0.5benig0.5p530.08.dat",
-                                          "0.75 Benig Rate" = "malig0.5benig0.75p530.08.dat",
-                                          "0.9 Benig Rate" = "malig0.5benig0.9p530.08.dat"))
-## plot data
-ggplot(malig_0.5_p530.08, aes(x = Update, y = Mean_p53, color = Starting_Benig_Rate)) + 
-  geom_jitter() + 
-  scale_color_brewer(palette = "Dark2") + 
-  facet_wrap(vars(Seed)) + 
-  ggtitle("Malign 0.5 P53 0.08") + 
-  theme(axis.text.x = element_text(angle=90, hjust=1))
 
+######################################################################
+## food count by mean p53
+food_by_p53 <- data.frame
+food_by_p53 <- cbind(temp_data_file$update)
+for (i in 1:length(list_folders)){
+  list_files <- list.files(path = paste0("C:/Users/koell/OneDrive - Carleton College/R/STAT_220/Assignments/empirical-p53-simulator/trial1/", list_folders[i]))
+  for (j in 1:length(list_files)){
+    food_by_p53 <- cbind(food_by_p53, read.csv(paste0("C:/Users/koell/OneDrive - Carleton College/R/STAT_220/Assignments/empirical-p53-simulator/trial1/", list_folders[i], "/", list_files[j]))$food_count)
+  } 
+}
+
+data_food <- cbind(data, food_by_p53)
+data_food <- as.tibble(data_food)
+#food_by_p53 <- data %>%
+  
+  
   
