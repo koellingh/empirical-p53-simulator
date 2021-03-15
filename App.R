@@ -18,7 +18,7 @@ data_std <- data_std %>%
 
 ui <- fluidPage(theme = shinytheme("darkly"),
                 titlePanel("An Interactive Graphic to Visualize Changes in Various Mutation Rates"),
-                h4("Henry Koelling and Andrew Vance"),#we can change this just a filler          
+                h4("Henry Koelling and Rudra Subramanian"),#we can change this just a filler          
                 tabsetPanel(
                   tabPanel("About",
                            h1("p53 Gene Expression in Cancer Evolution: Equilibrium of Expression Rate Dependent on Mutation Rate"),
@@ -83,7 +83,7 @@ ui <- fluidPage(theme = shinytheme("darkly"),
                            
                   ),
                   tabPanel("Paper",
-                           a("Link to paper",href="https://carletoncollegemn-my.sharepoint.com/personal/koellingh_carleton_edu/Documents/CS/Evo_Comp_and_Art_Life/final_paper_resources/final_paper.pdf")
+                           a("Link to paper",href="")
                   )
                 ))
 

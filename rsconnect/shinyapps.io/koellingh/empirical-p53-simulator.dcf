@@ -1,0 +1,13 @@
+name: empirical-p53-simulator
+title: empirical-p53-simulator
+username:
+account: koellingh
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3796410
+bundleId: 4350073
+url: https://koellingh.shinyapps.io/empirical-p53-simulator/
+when: 1615847923.19467
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .Org_Vals_.dat.swp|.RData|AUTHORS.md|CODE_OF_CONDUCT.md|CONTRIBUTING.md|data.csv|data_analysis.R|data_clean.csv|data_clean.R|data_std.csv|Dockerfile|evo-algo|evo-algo.csv|hello|LICENSE|main.sh|Makefile|MySettings.cfg|package.json|README.md|SECURITY.md|simple_repeat.py|ci/deploy_gh_pages.sh|ci/grep_dotos.sh|ci/parse_documentation_coverage.py|ci/parse_dotos.py|ci/parse_version.py|Example/MySettings.cfg|include/evo-algo/example.hpp|source/.native.cpp.swp|source/native.cpp|source/Org.h|source/web.cpp|source/World.h|tests/convert_for_tests.sh|tests/example.cpp|tests/Makefile|trial2/MySettings.cfg|web/evo-algo.html|web/index.html|web/jquery-1.11.2.min.js|docs|r_plots|third-party|trial1
